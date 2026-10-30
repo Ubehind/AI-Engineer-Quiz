@@ -30,11 +30,7 @@
         <strong>Keepstack</strong>
       </div>
       <div class="search-box">
-        <input id="search" placeholder="Search assets, tags, metadata...">
-        <select id="search-mode" title="Search mode">
-          <option value="keyword">Keyword</option>
-          <option value="semantic">Semantic</option>
-        </select>
+        <input id="search" aria-label="Keyword search" placeholder="Search assets, tags, metadata...">
       </div>
       <div class="topbar-right">
         <button id="btn-upload" class="btn btn-primary">Upload</button>
@@ -56,6 +52,7 @@
         </nav>
 
         <div id="facets" class="facets">
+          <p class="muted facet-note">Counts below cover all active assets.</p>
           <div class="facet-group">
             <h4>Media type</h4>
             <ul id="facet-media"></ul>
@@ -72,7 +69,6 @@
           <div class="view-head">
             <h2 id="result-title">Library</h2>
             <div class="view-controls">
-              <span id="active-filter" class="chip hidden"></span>
               <select id="sort">
                 <option value="newest">Newest</option>
                 <option value="oldest">Oldest</option>
@@ -81,8 +77,41 @@
               </select>
             </div>
           </div>
+          <section class="filter-panel" aria-label="Asset filters">
+            <div class="filter-fields">
+              <label>Collection
+                <select id="filter-collection" disabled><option value="">All collections</option></select>
+              </label>
+              <label>Media type
+                <select id="filter-media"><option value="">All media types</option></select>
+              </label>
+              <form id="include-tag-form">
+                <label for="include-tag-entry">Include tags (match all)</label>
+                <div class="tag-entry">
+                  <input id="include-tag-entry" list="tag-options" placeholder="Full tag name" autocomplete="off">
+                  <button class="btn" type="submit">Add include</button>
+                </div>
+              </form>
+              <form id="exclude-tag-form">
+                <label for="exclude-tag-entry">Exclude tags (match any)</label>
+                <div class="tag-entry">
+                  <input id="exclude-tag-entry" list="tag-options" placeholder="Full tag name" autocomplete="off">
+                  <button class="btn" type="submit">Add exclude</button>
+                </div>
+              </form>
+            </div>
+            <datalist id="tag-options"></datalist>
+            <p class="muted filter-hint">Add one full tag name at a time. Press Enter or Add. Click a condition below to remove it.</p>
+            <div id="filter-options-error" class="error hidden">Could not load filter options. <button id="retry-filter-options" class="btn" type="button">Retry</button></div>
+            <div class="filter-summary">
+              <div id="active-filters" aria-label="Active filters"></div>
+              <button id="btn-clear-filters" class="btn btn-ghost" type="button" disabled>Clear filters</button>
+            </div>
+          </section>
+          <div id="library-status" class="muted" role="status" aria-live="polite"></div>
+          <button id="retry-library" class="btn hidden" type="button">Retry search</button>
           <div id="grid" class="grid"></div>
-          <div id="empty" class="empty hidden">No assets yet. Click Upload to get started.</div>
+          <div id="empty" class="empty hidden">No matching assets. Try changing or clearing the filters.</div>
         </div>
 
         <div id="view-collections" class="view hidden">
