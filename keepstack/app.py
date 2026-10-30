@@ -335,14 +335,15 @@ def add_tag(uuid: str, request: Request, body: dict = Body(...),
     return {"ok": True}
 
 
-@app.delete("/api/assets/{uuid}/tags/{name}")
+@app.delete("/api/assets/{uuid}/tags/{name:path}")
 def remove_tag(uuid: str, name: str, user: dict = Depends(require_role("contributor"))):
     a = _get_asset_or_404(uuid)
     with transaction() as conn:
         conn.execute(
             "DELETE FROM asset_tags WHERE asset_id = ? AND tag_id = "
-            "(SELECT id FROM tags WHERE name = ?)", (a["id"], name.lower()))
+            "(SELECT id FROM tags WHERE name = ?)", (a["id"], name.strip().lower()))
     ingest.reindex_fts(a["id"])
+    ingest.reindex_embedding(a["id"])
     return {"ok": True}
 
 

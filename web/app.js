@@ -342,18 +342,39 @@ async function openAsset(uuid) {
     $("#d-save")?.addEventListener("click", async () => {
       const body = {};
       ["title","description","alt_text","dc_creator","rights_statement","retention_until"].forEach(f => { const el = $("#e-"+f); if (el) body[f] = el.value; });
-      await api("/api/assets/"+uuid, { method: "PATCH", json: body });
-      toast("Saved"); openAsset(uuid); loadLibrary();
+      const button = $("#d-save");
+      button.disabled = true;
+      try {
+        await api("/api/assets/"+uuid, { method: "PATCH", json: body });
+        toast("Saved");
+        await openAsset(uuid);
+        loadLibrary();
+      } catch {
+        toast("Could not save changes. Please retry.", "err");
+      } finally {
+        button.disabled = false;
+      }
     });
     $("#tag-add")?.addEventListener("keydown", async (e) => {
       if (e.key === "Enter" && e.target.value.trim()) {
-        await api("/api/assets/"+uuid+"/tags", { json: { name: e.target.value.trim() } });
-        openAsset(uuid);
+        e.preventDefault();
+        try {
+          await api("/api/assets/"+uuid+"/tags", { json: { name: e.target.value.trim() } });
+          await openAsset(uuid);
+          loadLibrary(); loadFilterOptions();
+        } catch {
+          toast("Could not add tag. Please retry.", "err");
+        }
       }
     });
     $$("#tag-row .rm").forEach(rm => rm.addEventListener("click", async () => {
-      await api("/api/assets/"+uuid+"/tags/"+encodeURIComponent(rm.dataset.tag), { method: "DELETE" });
-      openAsset(uuid);
+      try {
+        await api("/api/assets/"+uuid+"/tags/"+encodeURIComponent(rm.dataset.tag), { method: "DELETE" });
+        await openAsset(uuid);
+        loadLibrary(); loadFilterOptions();
+      } catch {
+        toast("Could not remove tag. Please retry.", "err");
+      }
     }));
     $("#d-share")?.addEventListener("click", async () => {
       const r = await api("/api/shares", { json: { target_type: "asset", target_id: a.id, permission: "download" } });
