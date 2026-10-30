@@ -89,8 +89,8 @@ def search(
     limit: int = 60,
     offset: int = 0,
 ) -> dict:
-    if not 1 <= limit <= 200 or offset < 0:
-        raise ValueError("limit must be between 1 and 200; offset must be nonnegative")
+    if not 1 <= limit <= 200 or not 0 <= offset <= 2**63 - 1:
+        raise ValueError("limit must be between 1 and 200; offset must fit a nonnegative SQLite integer")
     conn = get_conn()
 
     filters = dict(media_type=media_type, tag=tag, include_tags=include_tags,

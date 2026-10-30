@@ -180,7 +180,7 @@ def asset_filters(
     tag: Optional[str] = None,
     include_tags: Optional[list[str]] = Query(None),
     exclude_tags: Optional[list[str]] = Query(None),
-    collection_id: Optional[int] = Query(None, ge=1),
+    collection_id: Optional[int] = Query(None, ge=1, le=2**63 - 1),
     status: Literal["active"] = "active",
     sort: Literal["newest", "oldest", "name", "largest"] = "newest",
 ):
@@ -194,7 +194,7 @@ def list_assets(
     filters: dict = Depends(asset_filters),
     mode: Literal["keyword", "semantic"] = "keyword",
     limit: int = Query(60, ge=1, le=200),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=2**63 - 1),
     user: dict = Depends(require_user),
 ):
     return search.search(**filters, mode=mode, limit=limit, offset=offset)

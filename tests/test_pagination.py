@@ -31,6 +31,7 @@ def test_pages_follow_creation_time_with_id_tiebreaker(catalog, q, sort):
 @pytest.mark.parametrize("params", [
     {"limit": 0}, {"limit": -1}, {"limit": 201}, {"limit": "bad"}, {"limit": "1.5"},
     {"offset": -1}, {"offset": "bad"}, {"offset": "1.5"},
+    {"offset": str(2**64)}, {"collection_id": str(2**64)},
     {"sort": "created_at; DROP TABLE assets"}, {"mode": "unsupported"},
 ])
 def test_invalid_list_parameters_return_422(catalog, params):
@@ -58,7 +59,7 @@ def test_list_api_last_page_and_offset_past_end(catalog):
         assert not ({item["uuid"] for item in first["items"]} & {item["uuid"] for item in last["items"]})
 
 
-@pytest.mark.parametrize(("limit", "offset"), [(0, 0), (201, 0), (1, -1)])
+@pytest.mark.parametrize(("limit", "offset"), [(0, 0), (201, 0), (1, -1), (1, 2**64)])
 def test_direct_query_rejects_invalid_pagination(catalog, limit, offset):
     from keepstack import search
 

@@ -96,7 +96,7 @@ $("#btn-clear-filters").addEventListener("click", () => {
   $("#include-tag-entry").value = ""; $("#exclude-tag-entry").value = "";
   loadLibrary();
 });
-$("#retry-library").addEventListener("click", loadLibrary);
+$("#retry-library").addEventListener("click", () => loadLibrary({ resetPage: false }));
 $("#retry-filter-options").addEventListener("click", loadFilterOptions);
 $("#page-prev").addEventListener("click", () => {
   if (state.page <= 1) return;
