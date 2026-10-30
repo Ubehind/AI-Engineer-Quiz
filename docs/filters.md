@@ -53,3 +53,5 @@ uv run --no-sync python -m pytest -q
 使用现有 seed 数据进行页面验证：搜索 `coastal`，选择 Environment & Survey、image，包含 `coast` 和 `survey`，排除 `internal`，应得到 2 条结果。
 重复添加 `COAST` 不增加条件；再排除 `coast` 应为 0 条；移除该排除条件恢复 2 条；清除全部条件恢复 24 条。
 还已在浏览器中模拟延迟的旧请求及请求失败，确认最新条件生效，失败提示和 Retry search 可以恢复列表。
+
+完整的三页验收场景可用 `python -m keepstack seed-search` 生成，步骤、预期结果和交付取舍见根目录 `SUBMISSION.md`。
