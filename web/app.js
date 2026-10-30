@@ -2,7 +2,9 @@
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const state = { token: localStorage.getItem("keepstack_token"), user: null,
-  q: "", media: null, includeTags: [], excludeTags: [], sort: "newest", collection: null };
+  q: "", media: null, includeTags: [], excludeTags: [], sort: "newest", collection: null, page: 1 };
+const PAGE_SIZE = 12;
+let libraryTotal = 0;
 let filterCollections = [];
 
 // ---------- API helper ----------
@@ -64,6 +66,7 @@ let searchTimer, libraryController;
 let libraryRequestId = 0;
 $("#search").addEventListener("input", (e) => {
   state.q = e.target.value;
+  state.page = 1;
   clearTimeout(searchTimer);
   // Invalidate immediately, including while the next keyword request is debounced.
   libraryRequestId++;
@@ -95,6 +98,16 @@ $("#btn-clear-filters").addEventListener("click", () => {
 });
 $("#retry-library").addEventListener("click", loadLibrary);
 $("#retry-filter-options").addEventListener("click", loadFilterOptions);
+$("#page-prev").addEventListener("click", () => {
+  if (state.page <= 1) return;
+  state.page--;
+  loadLibrary({ resetPage: false });
+});
+$("#page-next").addEventListener("click", () => {
+  if (state.page * PAGE_SIZE >= libraryTotal) return;
+  state.page++;
+  loadLibrary({ resetPage: false });
+});
 
 async function loadFilterOptions() {
   $("#filter-options-error").classList.add("hidden");
@@ -160,22 +173,40 @@ function showLibraryLoading() {
   $("#grid").replaceChildren();
   $("#result-title").textContent = "Library";
   $("#grid").setAttribute("aria-busy", "true");
+  $("#page-prev").disabled = true;
+  $("#page-next").disabled = true;
+  $("#page-info").textContent = "";
 }
 
-async function loadLibrary() {
+function renderPagination(total) {
+  libraryTotal = total;
+  $("#page-prev").disabled = state.page <= 1;
+  $("#page-next").disabled = state.page * PAGE_SIZE >= total;
+  $("#page-info").textContent = `Page ${state.page} of ${Math.max(1, Math.ceil(total / PAGE_SIZE))} · ${total} matches`;
+}
+
+async function loadLibrary({ resetPage = true } = {}) {
+  if (resetPage) state.page = 1;
   clearTimeout(searchTimer);
   libraryController?.abort();
   const controller = libraryController = new AbortController();
   const requestId = ++libraryRequestId;
   const p = assetFilterParams();
-  p.set("limit", "120");
+  p.set("limit", String(PAGE_SIZE));
+  p.set("offset", String((state.page - 1) * PAGE_SIZE));
   syncFilterControls();
   showLibraryLoading();
   try {
     const data = await api("/api/assets?" + p.toString(), { signal: controller.signal });
     if (requestId !== libraryRequestId) return;
+    if (data.total && (state.page - 1) * PAGE_SIZE >= data.total) {
+      state.page = Math.ceil(data.total / PAGE_SIZE);
+      return loadLibrary({ resetPage: false });
+    }
+    if (!data.total) state.page = 1;
     renderFacets(data.facets);
     renderGrid(data.items, data.total);
+    renderPagination(data.total);
     $("#library-status").textContent = "";
   } catch (error) {
     if (requestId !== libraryRequestId || error.name === "AbortError") return;

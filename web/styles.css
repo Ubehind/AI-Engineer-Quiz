@@ -145,6 +145,7 @@ button, input, select { font-family: inherit; font-size: inherit; }
 .btn:disabled { opacity: .5; cursor: default; }
 #library-status:not(:empty) { margin-bottom: var(--s2); }
 #retry-library { margin-bottom: var(--s2); }
+.pagination { display: flex; align-items: center; justify-content: center; gap: var(--s2); margin-top: var(--s3); flex-wrap: wrap; }
 
 /* ---------- grid ---------- */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--s3); }

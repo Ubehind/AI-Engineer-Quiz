@@ -112,6 +112,11 @@
           <button id="retry-library" class="btn hidden" type="button">Retry search</button>
           <div id="grid" class="grid"></div>
           <div id="empty" class="empty hidden">No matching assets. Try changing or clearing the filters.</div>
+          <nav class="pagination" aria-label="Search result pages">
+            <button id="page-prev" class="btn" type="button" disabled>Previous</button>
+            <span id="page-info" class="muted" aria-live="polite"></span>
+            <button id="page-next" class="btn" type="button" disabled>Next</button>
+          </nav>
         </div>
 
         <div id="view-collections" class="view hidden">
