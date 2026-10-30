@@ -117,9 +117,9 @@ button, input, select { font-family: inherit; font-size: inherit; }
 
 /* ---------- content ---------- */
 .content { padding: var(--s4); overflow: auto; }
-.view-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s3); gap: var(--s2); }
+.view-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: var(--s3); gap: var(--s2); }
 .view-head h2 { margin: 0; font-size: 22px; }
-.view-controls { display: flex; align-items: center; gap: var(--s2); }
+.view-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .view-controls select, .table select {
   background: var(--base-1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364708a' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
   border: 1px solid var(--base-3); color: var(--text); border-radius: var(--radius-sm);
@@ -144,6 +144,7 @@ button, input, select { font-family: inherit; font-size: inherit; }
 #btn-clear-filters { flex-shrink: 0; }
 .btn:disabled { opacity: .5; cursor: default; }
 #library-status:not(:empty) { margin-bottom: var(--s2); }
+#export-status:not(:empty) { margin-bottom: var(--s2); }
 #retry-library { margin-bottom: var(--s2); }
 .pagination { display: flex; align-items: center; justify-content: center; gap: var(--s2); margin-top: var(--s3); flex-wrap: wrap; }
 

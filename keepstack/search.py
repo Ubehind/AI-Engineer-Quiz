@@ -10,6 +10,8 @@ Facet counts describe all active assets, independently of the current filters.
 """
 from __future__ import annotations
 
+import json
+from collections.abc import Iterator
 from typing import Optional
 
 from . import ai
@@ -34,7 +36,7 @@ def _normalize_tags(names: list[str]) -> list[str]:
 
 
 def _filter_sql(*, q, media_type, tag, include_tags, exclude_tags, collection_id, status):
-    """Shared predicates for list queries and future unpaginated exports.
+    """Shared predicates for list queries and unpaginated exports.
 
     EXISTS keeps each asset unique even when several tags/collections match.
     All user-provided values are bound parameters, including full tag names.
@@ -116,6 +118,40 @@ def search(
         "facets": _facets(status),
         "mode": mode,
     }
+
+
+def export_rows(
+    *, q: str = "", media_type: Optional[str] = None, tag: Optional[str] = None,
+    include_tags: Optional[list[str]] = None, exclude_tags: Optional[list[str]] = None,
+    collection_id: Optional[int] = None, status: str = "active", sort: str = "newest",
+) -> Iterator[dict]:
+    """Yield all matching records, loading tags once per batch, without a page cap."""
+    conn = get_conn()
+    join, where_sql, params = _filter_sql(
+        q=q, media_type=media_type, tag=tag, include_tags=include_tags,
+        exclude_tags=exclude_tags, collection_id=collection_id, status=status,
+    )
+    order = SORTS.get(sort, SORTS["newest"])
+    cursor = conn.execute(
+        "SELECT a.id, a.uuid, a.title, a.description, a.filename, a.media_type, a.created_at "
+        f"FROM assets a{join} WHERE {where_sql} ORDER BY {order}", params,
+    )
+    try:
+        while batch := cursor.fetchmany(200):
+            ids = [row["id"] for row in batch]
+            tags = {aid: [] for aid in ids}
+            placeholders = ",".join("?" for _ in ids)
+            for row in conn.execute(
+                "SELECT at.asset_id, t.name FROM asset_tags at JOIN tags t ON t.id = at.tag_id "
+                f"WHERE at.asset_id IN ({placeholders}) ORDER BY t.name", ids,
+            ):
+                tags[row["asset_id"]].append(row["name"])
+            for row in batch:
+                record = dict(row)
+                record["tags"] = json.dumps(tags[record.pop("id")], ensure_ascii=False)
+                yield record
+    finally:
+        cursor.close()
 
 
 def _semantic_search(q, filters, limit, offset) -> dict:

@@ -156,7 +156,7 @@ function syncFilterControls() {
   $("#btn-clear-filters").disabled = !conditions.length && !state.q;
 }
 
-// Keep all matching conditions together so list and future export requests agree.
+// Keep all matching conditions together so list and export requests agree.
 function assetFilterParams() {
   const p = new URLSearchParams({ q: state.q, sort: state.sort, mode: "keyword" });
   if (state.media) p.set("media_type", state.media);
@@ -165,6 +165,31 @@ function assetFilterParams() {
   state.excludeTags.forEach(t => p.append("exclude_tags", t));
   return p;
 }
+
+$("#btn-export").addEventListener("click", async () => {
+  const button = $("#btn-export");
+  button.disabled = true;
+  $("#export-status").textContent = "Preparing CSV for the current filters...";
+  let url;
+  try {
+    const response = await api("/api/assets/export.csv?" + assetFilterParams().toString());
+    const blob = await response.blob();
+    url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "assets.csv";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    $("#export-status").textContent = "CSV download started.";
+  } catch {
+    $("#export-status").textContent = "CSV download failed. Please try again.";
+  } finally {
+    // Give the browser time to consume the download URL before releasing it.
+    if (url) setTimeout(() => URL.revokeObjectURL(url), 1000);
+    button.disabled = false;
+  }
+});
 
 function showLibraryLoading() {
   $("#library-status").textContent = "Loading assets...";

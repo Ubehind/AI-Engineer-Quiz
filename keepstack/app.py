@@ -6,6 +6,7 @@ single-page web client is served from the ``web/`` directory at the root.
 """
 from __future__ import annotations
 
+import csv
 import io
 import ipaddress
 import json
@@ -173,8 +174,7 @@ async def upload_assets(
     return {"created": results}
 
 
-@app.get("/api/assets")
-def list_assets(
+def asset_filters(
     q: str = "",
     media_type: Optional[str] = None,
     tag: Optional[str] = None,
@@ -183,14 +183,39 @@ def list_assets(
     collection_id: Optional[int] = Query(None, ge=1),
     status: Literal["active"] = "active",
     sort: Literal["newest", "oldest", "name", "largest"] = "newest",
+):
+    """Parse the same matching conditions for lists and CSV downloads."""
+    return dict(q=q, media_type=media_type, tag=tag, include_tags=include_tags,
+                exclude_tags=exclude_tags, collection_id=collection_id, status=status, sort=sort)
+
+
+@app.get("/api/assets")
+def list_assets(
+    filters: dict = Depends(asset_filters),
     mode: Literal["keyword", "semantic"] = "keyword",
     limit: int = Query(60, ge=1, le=200),
     offset: int = Query(0, ge=0),
     user: dict = Depends(require_user),
 ):
-    return search.search(q=q, media_type=media_type, tag=tag,
-                         include_tags=include_tags, exclude_tags=exclude_tags, collection_id=collection_id,
-                         status=status, sort=sort, mode=mode, limit=limit, offset=offset)
+    return search.search(**filters, mode=mode, limit=limit, offset=offset)
+
+
+@app.get("/api/assets/export.csv")
+def export_assets(
+    filters: dict = Depends(asset_filters),
+    mode: Literal["keyword"] = "keyword",
+    user: dict = Depends(require_user),
+):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=[
+        "uuid", "title", "description", "filename", "media_type", "tags", "created_at",
+    ])
+    writer.writeheader()
+    writer.writerows(search.export_rows(**filters))
+    return Response("\ufeff" + output.getvalue(), media_type="text/csv", headers={
+        "Content-Disposition": 'attachment; filename="assets.csv"',
+        "Cache-Control": "no-store",
+    })
 
 
 def _get_asset_or_404(uuid: str) -> dict:

@@ -32,7 +32,11 @@
 `limit` 为 1–200，`offset` 为非负整数；不合法时返回 422。超出末页的偏移返回空列表和匹配总数。
 
 后端 `_filter_sql()` 集中构造查询条件，前端 `assetFilterParams()` 集中序列化筛选与排序条件，包含 `media_type`。
-后续导出应复用这两个入口，并独立处理列表的分页参数。
+`GET /api/assets/export.csv` 复用这两个入口，忽略 `limit` 和 `offset`，导出全部匹配结果。
+导出使用相同 Bearer 登录凭据，仅支持关键词模式。页面的 Export all matches (CSV) 在任意页均可下载全部结果，失败会提示重试。
+CSV 使用带 BOM 的 UTF-8，包含 uuid、title、description、filename、media_type、tags、created_at。
+tags 为按名称排序的 JSON 数组字符串；字段通过标准 CSV 引号转义。零条结果仍输出表头。
+查询和标签按 200 条批次读取，最终 CSV 在内存中生成，适用于本题的同步导出场景。
 
 ## 验证
 
